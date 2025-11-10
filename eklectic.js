@@ -1642,3 +1642,179 @@ Mot de passe : ${password}`;
         data: "ok"
     })
 })
+
+
+// @desc intern
+async function extractNumber(numberStr) {
+    let match = numberStr.match(/^0*(\d{6})/);
+    return `${match[1]}`;
+}
+
+// @desc intern
+function addDays(date, days) {
+    date.setDate(date.getDate() + days);
+    return date;
+}
+
+// @desc intern
+function makePassCode(length) {
+    let result = '';
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+}
+
+// @desc intern
+function makeRandomNum(length) {
+    let result = '';
+    const characters = '0123456789';
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+}
+
+// @desc intern
+async function sendSmsBySms(data, res){
+    let authUri = 'https://payment.eklectic.tn/API/oauth/token';
+    let params = {
+        "grant_type": "client_credentials",
+        "client_id": process.env.EKLECTIC_CLIENT_ID,
+        "client_secret": process.env.EKLECTIC_CLIENT_SK,
+    };
+                        
+    let auth = await dataService.postWithParams(authUri, params, res)
+              
+    let uri = 'https://payment.eklectic.tn/API/subscription/sendsms';
+    let contentType = 'application/json';
+    let authorization = "Bearer " + auth.access_token;
+                        
+    await dataService.postWithHeader(uri, data, contentType, authorization)
+    
+    return true;
+}
+
+// @desc intern
+async function sendSmsBySubId(data, res){
+    let authUri = 'https://payment.eklectic.tn/API/oauth/token';
+    let params = {
+        "grant_type": "client_credentials",
+        "client_id": process.env.EKLECTIC_CLIENT_ID,
+        "client_secret": process.env.EKLECTIC_CLIENT_SK,
+    };
+                        
+    let auth = await dataService.postWithParams(authUri, params, res)
+              
+    let uri = 'https://payment.eklectic.tn/API/subscription/sendmt';
+    let contentType = 'application/json';
+    let authorization = "Bearer " + auth.access_token;
+                        
+    await dataService.postWithHeader(uri, data, contentType, authorization)
+    
+    return true;
+}
+
+// @desc intern
+async function getPhoneType(phone, auth, res){
+
+    let uri = 'https://payment.eklectic.tn/API/subscription/ported';
+    let contentType = 'application/json';
+    let authorization = "Bearer " + auth.access_token;
+
+    let data = {
+        msisdn: phone
+    }
+
+    let phonetype;
+
+    let response = await dataService.postNoError(uri, data, contentType, authorization, res)
+
+    if (!response){
+        const sub = parseInt(phone.charAt(0), 10);
+        if(sub === 5 ){
+            phonetype = 'orange'
+        }
+        else if(sub === 2 ){
+            phonetype = 'ooredoo'
+        }
+        else{
+            phonetype = 'telecom'
+        }
+    }else{
+       
+        if(parseInt(response.routing, 10) === 1310 ){
+            phonetype = 'orange'
+        }
+        else if(parseInt(response.routing, 10) === 1330 ){
+            phonetype = 'ooredoo'
+        }
+        else{
+            phonetype = 'telecom'
+        }
+    }
+   
+    
+    return phonetype;
+}
+
+// @desc intern
+async function getAlias(phone, auth, res){
+
+    let uri = 'https://payment.eklectic.tn/API/subscription/PWALIAS/' + phone;
+    let contentType = 'application/json';
+    let authorization = "Bearer " + auth.access_token;
+
+    let response = await dataService.getWithHeader(uri, contentType, authorization, res)
+     
+    return response.ISE2;
+}
+
+// @desc intern
+function encryptData(data){
+ // Get the property names in alphabetical order
+ let alphabeticalOrder = Object.keys(data).sort();
+
+ // Concatenate values
+ let concatenatedData = alphabeticalOrder
+   .map((propertyName) => `${propertyName}${data[propertyName]}`)
+   .join("");
+ console.log(concatenatedData + process.env.DCB_API_SK)  
+ // hashData
+ let hashData = md5(concatenatedData + process.env.DCB_API_SK);
+ console.log(hashData) 
+ data.hash = hashData;
+
+ return data;
+}
+
+// @desc intern
+function validateData(data){
+     // Exclude the 'hash' property
+     let { hash, ...restData } = data;
+  
+     // Get the property names in alphabetical order
+     let alphabeticalOrder = Object.keys(restData).sort();
+   
+     // Concatenate values
+     let concatenatedData = alphabeticalOrder
+       .map((propertyName) => `${propertyName}${restData[propertyName]}`)
+       .join("");
+
+     // hashData
+     let hashData = md5(concatenatedData + process.env.DCB_API_SK);
+   
+     if (hashData === data.hash) {
+       return true;
+     } else {
+       return false;
+     }
+
+}

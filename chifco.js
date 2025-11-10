@@ -1554,3 +1554,29 @@ const handleCssChifco = asyncHandler(async (req, res) => {
         })
     }
 })
+
+
+// @desc intern
+function validateChifcoData(data){
+
+    // Exclude the 'hash' property
+    let { hash, ...restData } = data;
+ 
+    // Get the property names in alphabetical order
+    let alphabeticalOrder = Object.keys(restData).sort();
+  
+    // Concatenate values
+    let concatenatedData = alphabeticalOrder
+      .map((propertyName) => `${propertyName}${restData[propertyName]}`)
+      .join("");
+
+    // hashData
+    let hashData = md5(concatenatedData + process.env.DCB_CHIFCO_API_SK);
+  
+    if (hashData === data.hash) {
+      return true;
+    } else {
+      return false;
+    }
+
+}

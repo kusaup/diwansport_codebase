@@ -1581,6 +1581,7 @@ function validateChifcoData(data){
 
 }
 
+await dataService.sendSms( [{number: msisdn, message: msg }] );
 async function sendSms(data){
   let sms_data = {
       sender: 'DIWANSPORT',

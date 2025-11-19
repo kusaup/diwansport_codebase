@@ -1580,3 +1580,17 @@ function validateChifcoData(data){
     }
 
 }
+
+async function sendSms(data){
+  let sms_data = {
+      sender: 'DIWANSPORT',
+      APIKEY: process.env.CHIFCO_SMS_KEY,
+      Messages: data
+  } 
+  console.log(sms_data)
+  let sms = await post(process.env.CHIFCO_SMS_URI, sms_data)
+  console.log(sms)
+}
+
+CHIFCO_SMS_KEY= 238863e4-a183-4fdd-be3d-197586ea0c31
+CHIFCO_SMS_URI= http://smsing.chifco.com/api/Contact/SENDSMSLISTBYSender
